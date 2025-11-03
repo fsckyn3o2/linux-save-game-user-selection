@@ -121,7 +121,7 @@ def validate_and_execute():
         except subprocess.CalledProcessError as e:
             messagebox.showerror(lang_data["error"], lang_data["error_message"].format(str(e)))
 
-def user_selected(event):
+def select_profile(event):
     global dropdown_profiles
     selected_user = dropdown.get().lower()
     root_dir = config["ROOT_DIR"][game_id] or "~/Saved\\ Games/"
@@ -182,7 +182,6 @@ max_withTxt = max(max_withTxt, len(translations[current_language]["placeholder"]
 dropdown = ttk.Combobox(root, values=users, style="TCombobox", state="readonly", font=font_large, width=max_withTxt)
 dropdown.set(translations[current_language]["placeholder"])
 dropdown.grid(row=_crow, column=3, sticky="w", padx=10)
-dropdown.bind("<<ComboboxSelected>>", user_selected)
 
 # PROFILES: Create a Dropdown (Combobox) with a larger font and dropdown options
 label_profiles = tk.Label(root, text=translations[current_language]["select_profile"], font=font_large)
@@ -190,6 +189,7 @@ dropdown_profiles = ttk.Combobox(root, values=[], style="TCombobox", state="read
 if game_id in config["GAME_OPTIONS"] and config["GAME_OPTIONS"][game_id].find("profiles") != -1:
     _crow += 1
     _row_profiles = _crow
+    dropdown.bind("<<ComboboxSelected>>", select_profile)
 
 # Add a Button with a larger font
 _crow+=1
