@@ -102,6 +102,7 @@ def validate_and_execute():
     selected_profile = dropdown_profiles.get()
     root_dir = config["ROOT_DIR"][game_id] or "~/Saved Games/"
     game_dir = config["GAME_DIR"][game_id]
+    user_dir = config["USER_DIR"][game_id].format(selected_user)
 
     if not selected_user or selected_user == lang_data["placeholder"].lower():
         # Show a warning if no user is selected
@@ -111,7 +112,7 @@ def validate_and_execute():
     if game_id in config["GAME_OPTIONS"] and config["GAME_OPTIONS"][game_id].find("profiles") != -1:
         if not selected_profile or selected_profile == lang_data["placeholder_profile"]:
             # Show a warning if no user profile is selected
-            messagebox.showwarning(lang_data["no_selection"], lang_data["select_warning_profile"])
+            messagebox.showwarning(lang_data["config_error"], lang_data["select_warning_profile"])
             return
     else:
         selected_profile = None
@@ -125,10 +126,9 @@ def validate_and_execute():
     confirm = messagebox.askyesno(lang_data["confirm_selection"], lang_data["confirm_prompt"].format(selected_user))
     if confirm:
         try:
-            user_dir = config["USER_DIR"][game_id].format(selected_user)
+            # update user_dir with the selected profile
             if selected_profile:
-                profile_dir = dropdown_profiles.get()
-                user_dir = "{}/{}".format(user_dir, profile_dir)
+                user_dir = "{}/{}".format(user_dir, selected_profile)
 
             # Remove symlink
             command = f"rm -f {game_dir}"
