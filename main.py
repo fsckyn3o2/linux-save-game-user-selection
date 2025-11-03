@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from pathlib import Path
 from tkinter import ttk, font
@@ -42,6 +43,8 @@ if (not args.game in config["GAME_ID"]) and (not args.dir in config["GAME_ID"]) 
 game_title = 'Game Title'
 if args.game in game["GAME_TITLE"]:
     game_title = game["GAME_TITLE"][args.game]
+elif args.dirs in game["GAME_TITLE"]:
+    game_title = game["GAME_TITLE"][args.dir]
 
 game_id = ''
 if args.game in config["GAME_ID"]:
@@ -71,8 +74,10 @@ def update_language():
 
     # Update all visible text
     label.config(text=lang_data["select_user"])
+    label_profiles.config(text=lang_data["select_profile"])
     execute_button.config(text=lang_data["validate"])
     dropdown.set(lang_data["placeholder"])
+    dropdown_profiles.set(lang_data["placeholder_profile"])
     language_link.config(text=lang_data["language_toggle"])
     max_withTxt = max(len(user) for user in users)
     max_withTxt = max(max_withTxt, len(translations[current_language]["placeholder"]))
@@ -103,7 +108,7 @@ def validate_and_execute():
     confirm = messagebox.askyesno(lang_data["confirm_selection"], lang_data["confirm_prompt"].format(selected_user))
     if confirm:
         try:
-            root_dir = config["ROOT_DIR"][game_id] or "/home/nico/Saved\\ Games/"
+            root_dir = config["ROOT_DIR"][game_id] or "~/Saved Games/"
             game_dir = config["GAME_DIR"][game_id]
             user_dir = config["USER_DIR"][game_id].format(selected_user)
 
@@ -111,10 +116,23 @@ def validate_and_execute():
             command = f"rm -f {game_dir}"
             subprocess.run(command, shell=True, check=False)
 
-            command = f"ln -s {root_dir}{user_dir} {game_dir}"
+            command = f"ln -s '{root_dir}{user_dir}' {game_dir}"
             subprocess.run(command, shell=True, check=True)
         except subprocess.CalledProcessError as e:
             messagebox.showerror(lang_data["error"], lang_data["error_message"].format(str(e)))
+
+def user_selected(event):
+    global dropdown_profiles
+    selected_user = dropdown.get().lower()
+    root_dir = config["ROOT_DIR"][game_id] or "~/Saved\\ Games/"
+    user_dir = config["USER_DIR"][game_id].format(selected_user)
+    label_profiles.grid(row=_row_profiles, column=2, sticky="w", padx=10, pady=20)
+    profiles = list(filter(lambda item: os.path.isdir(os.path.join(f"{root_dir}{user_dir}", item)), os.listdir(f"{root_dir}{user_dir}")))
+    max_withTxt_profiles = max(len(profiles) for profile in profiles)
+    max_withTxt_profiles = max(max_withTxt_profiles, len(translations[current_language]["placeholder_profile"]))
+    dropdown_profiles.config(values=profiles, style="TCombobox", state="readonly", font=font_large, width=max_withTxt_profiles)
+    dropdown_profiles.set(translations[current_language]["placeholder_profile"])
+    dropdown_profiles.grid(row=_row_profiles, column=3, sticky="w", padx=10, pady=20)
 
 
 # Create main application window
@@ -152,20 +170,31 @@ language_link.grid(row=0, column=5, sticky="ne", padx=10, pady=10)
 labelTitle = tk.Label(root, text=game_title, font=font_xlarge, height=3, anchor="n")
 labelTitle.grid(row=0, column=1, columnspan=4, sticky="n")
 
+# USERS: Create a Dropdown (Combobox) with a larger font and dropdown options
+_crow=2
 label = tk.Label(root, text=translations[current_language]["select_user"], font=font_large)
-label.grid(row=2, column=2, sticky="w", padx=10)
+label.grid(row=_crow, column=2, sticky="w", padx=10)
 
-# Create a Dropdown (Combobox) with a larger font and dropdown options
 users = config["MAIN"].get("users", "user1,user2").split(",")
 max_withTxt = max(len(user) for user in users)
 max_withTxt = max(max_withTxt, len(translations[current_language]["placeholder"]))
+
 dropdown = ttk.Combobox(root, values=users, style="TCombobox", state="readonly", font=font_large, width=max_withTxt)
 dropdown.set(translations[current_language]["placeholder"])
-dropdown.grid(row=2, column=3, sticky="e", padx=10)
+dropdown.grid(row=_crow, column=3, sticky="w", padx=10)
+dropdown.bind("<<ComboboxSelected>>", user_selected)
+
+# PROFILES: Create a Dropdown (Combobox) with a larger font and dropdown options
+label_profiles = tk.Label(root, text=translations[current_language]["select_profile"], font=font_large)
+dropdown_profiles = ttk.Combobox(root, values=[], style="TCombobox", state="readonly", font=font_large, width=max_withTxt)
+if game_id in config["GAME_OPTIONS"] and config["GAME_OPTIONS"][game_id].find("profiles") != -1:
+    _crow += 1
+    _row_profiles = _crow
 
 # Add a Button with a larger font
+_crow+=1
 execute_button = tk.Button(root, text=translations[current_language]["validate"], font=font_large, command=validate_and_execute)
-execute_button.grid(row=3, column=0, columnspan=6, pady=40)
+execute_button.grid(row=_crow, column=0, columnspan=6, pady=40)
 
 root.grid_columnconfigure(0, weight=0, minsize=font.Font(family=font_link[0],size=font_link[1]).measure(translations[current_language]["language_toggle"]))
 root.grid_columnconfigure(1, weight=1)
@@ -176,3 +205,5 @@ root.grid_columnconfigure(5, weight=0)
 
 # Run the application
 root.mainloop()
+
+
