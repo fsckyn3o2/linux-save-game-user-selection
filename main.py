@@ -75,6 +75,7 @@ def update_language():
     # Update all visible text
     label.config(text=lang_data["select_user"])
     label_profiles.config(text=lang_data["select_profile"])
+    label_profiles_error.config(text=lang_data["select_profile_error"])
     execute_button.config(text=lang_data["validate"])
     dropdown.set(lang_data["placeholder"])
     dropdown_profiles.set(lang_data["placeholder_profile"])
@@ -124,15 +125,25 @@ def validate_and_execute():
 def select_profile(event):
     global dropdown_profiles
     selected_user = dropdown.get().lower()
-    root_dir = config["ROOT_DIR"][game_id] or "~/Saved\\ Games/"
-    user_dir = config["USER_DIR"][game_id].format(selected_user)
-    label_profiles.grid(row=_row_profiles, column=2, sticky="w", padx=10, pady=20)
-    profiles = list(filter(lambda item: os.path.isdir(os.path.join(f"{root_dir}{user_dir}", item)), os.listdir(f"{root_dir}{user_dir}")))
-    max_withTxt_profiles = max(len(profiles) for profile in profiles)
-    max_withTxt_profiles = max(max_withTxt_profiles, len(translations[current_language]["placeholder_profile"]))
-    dropdown_profiles.config(values=profiles, style="TCombobox", state="readonly", font=font_large, width=max_withTxt_profiles)
-    dropdown_profiles.set(translations[current_language]["placeholder_profile"])
-    dropdown_profiles.grid(row=_row_profiles, column=3, sticky="w", padx=10, pady=20)
+    if selected_user != translations[current_language]["placeholder"]:
+        root_dir = config["ROOT_DIR"][game_id] or "~/Saved\\ Games/"
+        user_dir = config["USER_DIR"][game_id].format(selected_user)
+        label_profiles.grid(row=_row_profiles, column=2, sticky="w", padx=10, pady=20)
+        if os.path.isdir(f"{root_dir}{user_dir}"):
+            profiles = list(filter(lambda item: os.path.isdir(os.path.join(f"{root_dir}{user_dir}", item)), os.listdir(f"{root_dir}{user_dir}")))
+            if not profiles:
+                dropdown_profiles.grid_forget()
+                label_profiles_error.grid(row=_row_profiles, column=3, sticky="w", padx=20)
+            else:
+                label_profiles_error.grid_forget()
+                max_withTxt_profiles = max(len(profiles) for profile in profiles)
+                max_withTxt_profiles = max(max_withTxt_profiles, len(translations[current_language]["placeholder_profile"]))
+                dropdown_profiles.config(values=profiles, style="TCombobox", state="readonly", font=font_large, width=max_withTxt_profiles)
+                dropdown_profiles.set(translations[current_language]["placeholder_profile"])
+                dropdown_profiles.grid(row=_row_profiles, column=3, sticky="w", padx=10, pady=20)
+        else:
+            dropdown_profiles.grid_forget()
+            label_profiles_error.grid(row=_row_profiles, column=3, sticky="w", padx=20)
 
 
 # Create main application window
@@ -186,10 +197,13 @@ dropdown.grid(row=_crow, column=3, sticky="w", padx=10)
 # PROFILES: Create a Dropdown (Combobox) with a larger font and dropdown options
 label_profiles = tk.Label(root, text=translations[current_language]["select_profile"], font=font_large)
 dropdown_profiles = ttk.Combobox(root, values=[], style="TCombobox", state="readonly", font=font_large, width=max_withTxt)
+label_profiles_error = tk.Label(root, text=translations[current_language]["select_profile_error"], font=font_large)
 if game_id in config["GAME_OPTIONS"] and config["GAME_OPTIONS"][game_id].find("profiles") != -1:
     _crow += 1
     _row_profiles = _crow
     dropdown.bind("<<ComboboxSelected>>", select_profile)
+    label_profiles_error.grid_forget()
+
 
 # Add a Button with a larger font
 _crow+=1
