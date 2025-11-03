@@ -99,19 +99,36 @@ def validate_and_execute():
 
     # Get the selected user from the Combobox
     selected_user = dropdown.get().lower()
+    selected_profile = dropdown_profiles.get()
+    root_dir = config["ROOT_DIR"][game_id] or "~/Saved Games/"
+    game_dir = config["GAME_DIR"][game_id]
 
-    if not selected_user or selected_user == lang_data["placeholder"]:
+    if not selected_user or selected_user == lang_data["placeholder"].lower():
         # Show a warning if no user is selected
         messagebox.showwarning(lang_data["no_selection"], lang_data["select_warning"])
+        return
+
+    if game_id in config["GAME_OPTIONS"] and config["GAME_OPTIONS"][game_id].find("profiles") != -1:
+        if not selected_profile or selected_profile == lang_data["placeholder_profile"]:
+            # Show a warning if no user profile is selected
+            messagebox.showwarning(lang_data["no_selection"], lang_data["select_warning_profile"])
+            return
+    else:
+        selected_profile = None
+
+    if not os.path.isdir(os.path.dirname(f"{game_dir}")):
+        # Show a warning if no game directory exists
+        messagebox.showwarning(lang_data["config_error"], lang_data["select_warning_gamedir"])
         return
 
     # Confirmation dialog
     confirm = messagebox.askyesno(lang_data["confirm_selection"], lang_data["confirm_prompt"].format(selected_user))
     if confirm:
         try:
-            root_dir = config["ROOT_DIR"][game_id] or "~/Saved Games/"
-            game_dir = config["GAME_DIR"][game_id]
             user_dir = config["USER_DIR"][game_id].format(selected_user)
+            if selected_profile:
+                profile_dir = dropdown_profiles.get()
+                user_dir = "{}/{}".format(user_dir, profile_dir)
 
             # Remove symlink
             command = f"rm -f {game_dir}"
@@ -134,6 +151,7 @@ def select_profile(event):
             if not profiles:
                 dropdown_profiles.grid_forget()
                 label_profiles_error.grid(row=_row_profiles, column=3, sticky="w", padx=20)
+                execute_button.config(state=tk.DISABLED)
             else:
                 label_profiles_error.grid_forget()
                 max_withTxt_profiles = max(len(profiles) for profile in profiles)
@@ -141,9 +159,11 @@ def select_profile(event):
                 dropdown_profiles.config(values=profiles, style="TCombobox", state="readonly", font=font_large, width=max_withTxt_profiles)
                 dropdown_profiles.set(translations[current_language]["placeholder_profile"])
                 dropdown_profiles.grid(row=_row_profiles, column=3, sticky="w", padx=10, pady=20)
+                execute_button.config(state=tk.ACTIVE)
         else:
             dropdown_profiles.grid_forget()
             label_profiles_error.grid(row=_row_profiles, column=3, sticky="w", padx=20)
+            execute_button.config(state=tk.DISABLED)
 
 
 # Create main application window
@@ -197,7 +217,7 @@ dropdown.grid(row=_crow, column=3, sticky="w", padx=10)
 # PROFILES: Create a Dropdown (Combobox) with a larger font and dropdown options
 label_profiles = tk.Label(root, text=translations[current_language]["select_profile"], font=font_large)
 dropdown_profiles = ttk.Combobox(root, values=[], style="TCombobox", state="readonly", font=font_large, width=max_withTxt)
-label_profiles_error = tk.Label(root, text=translations[current_language]["select_profile_error"], font=font_large)
+label_profiles_error = tk.Label(root, text=translations[current_language]["select_profile_error"], font=font_large, foreground="red")
 if game_id in config["GAME_OPTIONS"] and config["GAME_OPTIONS"][game_id].find("profiles") != -1:
     _crow += 1
     _row_profiles = _crow
@@ -207,8 +227,9 @@ if game_id in config["GAME_OPTIONS"] and config["GAME_OPTIONS"][game_id].find("p
 
 # Add a Button with a larger font
 _crow+=1
+_crow_execute_button = _crow
 execute_button = tk.Button(root, text=translations[current_language]["validate"], font=font_large, command=validate_and_execute)
-execute_button.grid(row=_crow, column=0, columnspan=6, pady=40)
+execute_button.grid(row=_crow_execute_button, column=0, columnspan=6, pady=40)
 
 root.grid_columnconfigure(0, weight=0, minsize=font.Font(family=font_link[0],size=font_link[1]).measure(translations[current_language]["language_toggle"]))
 root.grid_columnconfigure(1, weight=1)
