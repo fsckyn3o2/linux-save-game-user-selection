@@ -143,7 +143,7 @@ def select_profile(event):
     global dropdown_profiles
     selected_user = dropdown.get().lower()
     if selected_user != translations[current_language]["placeholder"]:
-        root_dir = config["ROOT_DIR"][game_id] or "~/Saved\\ Games/"
+        root_dir = config["ROOT_DIR"][game_id] or "~/Saved Games/"
         user_dir = config["USER_DIR"][game_id].format(selected_user)
         label_profiles.grid(row=_row_profiles, column=2, sticky="w", padx=10, pady=20)
         if os.path.isdir(f"{root_dir}{user_dir}"):
