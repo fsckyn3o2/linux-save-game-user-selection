@@ -131,10 +131,10 @@ def validate_and_execute():
                 user_dir = "{}/{}".format(user_dir, selected_profile)
 
             # Remove symlink
-            command = f"rm -f {game_dir}"
+            command = f"rm -f \"{game_dir}\""
             subprocess.run(command, shell=True, check=False)
 
-            command = f"ln -s '{root_dir}{user_dir}' {game_dir}"
+            command = f"ln -s \"{root_dir}{user_dir}\" \"{game_dir}\""
             subprocess.run(command, shell=True, check=True)
         except subprocess.CalledProcessError as e:
             messagebox.showerror(lang_data["error"], lang_data["error_message"].format(str(e)))
