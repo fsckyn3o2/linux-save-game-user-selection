@@ -43,7 +43,7 @@ if (not args.game in config["GAME_ID"]) and (not args.dir in config["GAME_ID"]) 
 game_title = 'Game Title'
 if args.game in game["GAME_TITLE"]:
     game_title = game["GAME_TITLE"][args.game]
-elif args.dirs in game["GAME_TITLE"]:
+elif args.dir in game["GAME_TITLE"]:
     game_title = game["GAME_TITLE"][args.dir]
 
 game_id = ''
